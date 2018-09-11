@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="概述辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【CTF】NJCTF2017 writeup">
+<meta property="og:url" content="http://blog.0kami.cn/2017/03/15/njctf-2017/index.html">
+<meta property="og:site_name" content="0kami's Blog">
+<meta property="og:description" content="概述辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题">
+<meta property="og:image" content="http://blog.0kami.cn/img/njctf_2017_3_13/1.png">
+<meta property="og:image" content="http://blog.0kami.cn/img/njctf_2017_3_13/2.png">
+<meta property="og:image" content="http://blog.0kami.cn/img/njctf_2017_3_13/3.png">
+<meta property="og:updated_time" content="2018-01-25T07:31:22.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="【CTF】NJCTF2017 writeup">
+<meta name="twitter:description" content="概述辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题">
+<meta name="twitter:image" content="http://blog.0kami.cn/img/njctf_2017_3_13/1.png">
+    
+    
+        
+          
+              <link rel="shortcut icon" href="/images/favicon.ico">
+          
+        
+        
+          
+            <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+          
+        
+        
+          
+            <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+          
+        
+    
+    <!-- title -->
+    <title>【CTF】NJCTF2017 writeup</title>
+    <!-- styles -->
+    <link rel="stylesheet" href="/css/style.css">
+    <!-- rss -->
+    
+    
+</head>
+
+<body>
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#"><i class="fa fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" href="/2017/03/16/seacms-v6-5-getshell/"><i class="fa fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" href="/2017/02/03/code-review-pre-prepare/"><i class="fa fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" href="#"><i class="fa fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/03/15/njctf-2017/"><i class="fa fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&text=【CTF】NJCTF2017 writeup"><i class="fa fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&is_video=false&description=【CTF】NJCTF2017 writeup"><i class="fa fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【CTF】NJCTF2017 writeup&body=Check out this article: http://blog.0kami.cn/2017/03/15/njctf-2017/"><i class="fa fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&name=【CTF】NJCTF2017 writeup&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题&lt;br&gt;"><i class="fa fa-tumblr " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    <div id="toc">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Web题"><span class="toc-number">2.</span> <span class="toc-text">Web题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Login（100）"><span class="toc-number">2.0.1.</span> <span class="toc-text">Login（100）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Get-Flag-100"><span class="toc-number">2.0.2.</span> <span class="toc-text">Get Flag(100)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#come-on-200"><span class="toc-number">2.0.3.</span> <span class="toc-text">come on(200)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Be-Admin-300"><span class="toc-number">2.0.4.</span> <span class="toc-text">Be Admin(300)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+  </span>
+</div>
+
+    
+    <div class="content index width mx-auto px2 my4">
+        
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle" itemprop="name headline">
+        【CTF】NJCTF2017 writeup
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span itemprop="name">0kami's Blog</span>
+      </span>
+      
+    <div class="postdate">
+        <time datetime="2017-03-15T03:29:05.000Z" itemprop="datePublished">2017-03-15</time>
+    </div>
+
+
+      
+    <div class="article-tag">
+        <i class="fa fa-tag"></i>
+        <a class="tag-link" href="/tags/njctf/">njctf</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content" itemprop="articleBody">
+    <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题<br><a id="more"></a></p>
+<h1 id="Web题"><a href="#Web题" class="headerlink" title="Web题"></a>Web题</h1><h3 id="Login（100）"><a href="#Login（100）" class="headerlink" title="Login（100）"></a>Login（100）</h3><p>好吧，这道题取了巧，谁让大黑客们都是弱密码呢！！！！<br>由于没有做验证码机制，所以扫了一波弱口令，然后…然后就进去啦<br>其实这道题考的是mysql的长度限制漏洞。利用2个mysql的特性</p>
+<ol>
+<li>当数据超过建表时的规定的数据大小，mysql将超过的部分截断</li>
+<li>当select时where查询字句中的数据如果最后以空格结尾，mysql默认将空格去除查询<br>那么利用这2个特性，我们只要注册一个admin+N*%20+x就可以已admin登陆，然后getflag：NJCTF{4R3_Y0u_7H3_Re41_aDM1N?}</li>
+</ol>
+<h3 id="Get-Flag-100"><a href="#Get-Flag-100" class="headerlink" title="Get Flag(100)"></a>Get Flag(100)</h3><p>这道题考了命令执行漏洞<br>首先发现存在文件任意读取漏洞，那么尝试读取一下源码，最后试出来是app.py<br><img src="http://blog.0kami.cn/img/njctf_2017_3_13/1.png" alt=""><br>可以看到有个命令执行并且是可控的，但是过滤了一些字符，用&amp;就可以绕过。<br>ls 查看一下<br><img src="http://blog.0kami.cn/img/njctf_2017_3_13/2.png" alt=""><br>可以看到flag文件<br><code>9iZM2qTEmq67SOdJp%!oJm2%M4!nhS_thi5_flag</code><br>cat一波，这里的特殊字符转移是关键<br><img src="http://blog.0kami.cn/img/njctf_2017_3_13/3.png" alt=""></p>
+<h3 id="come-on-200"><a href="#come-on-200" class="headerlink" title="come on(200)"></a>come on(200)</h3><p>具体看大佬们的writeup即可，这道题主要学到了其盲注的注入方式。<br>binary函数用来区分大小写</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">select xxx from xxx like x%</div><div class="line">select xxx from xxx like xx%</div><div class="line">select xxx from xxx like xxx%</div><div class="line">select xxx from xxx like xxxx%</div><div class="line">...</div></pre></td></tr></table></figure>
+<p>通过like来住出数据</p>
+<h3 id="Be-Admin-300"><a href="#Be-Admin-300" class="headerlink" title="Be Admin(300)"></a>Be Admin(300)</h3><p>首先发现有.bak文件，下下来看一下,发现这道题主要考的是cbc字节翻转攻击和padding oracle attack.<br>首先由于登陆出存在注入，我们可以把数据中的encrypt_pass取出来<br>登陆绕过可以通过php弱类型比较来绕过，admin／0即可登陆<br>要通过cbc字节翻转必须知道defaultId的值，所以我们需要先跑出defaultId的值<br>padding oracle attack参考<a href="http://www.freebuf.com/articles/web/15504.html" target="_blank" rel="external">padding oracle attack</a><br>符合我们现在的情况：</p>
+<ol>
+<li>已知真实IV</li>
+<li>已知对应cipher text</li>
+<li>当解密失败ERROR错误<br>题目环境可能坏了，本地搭一下，跑一下中间值<br>需要注意的一点是padding oracle attack第一个字符没办法跑出来，由于最后一个字符解出来是空白所以还是error，不过没关系暴力一遍就好了（ps：有了原理，写代码很容易，就不放代码了）</li>
+</ol>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>欠缺的还是很多，继续💪</p>
+
+  </div>
+</article>
+
+    <div class="blog-post-comments">
+        <div id="disqus_thread">
+            <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+        </div>
+    </div>
+
+
+
+    </div>
+    
+      <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </div>
+
+    <div id="toc-footer" style="display: none">
+      <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#概述"><span class="toc-number">1.</span> <span class="toc-text">概述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Web题"><span class="toc-number">2.</span> <span class="toc-text">Web题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Login（100）"><span class="toc-number">2.0.1.</span> <span class="toc-text">Login（100）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Get-Flag-100"><span class="toc-number">2.0.2.</span> <span class="toc-text">Get Flag(100)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#come-on-200"><span class="toc-number">2.0.3.</span> <span class="toc-text">come on(200)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Be-Admin-300"><span class="toc-number">2.0.4.</span> <span class="toc-text">Be Admin(300)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+    </div>
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" href="http://www.facebook.com/sharer.php?u=http://blog.0kami.cn/2017/03/15/njctf-2017/"><i class="fa fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://twitter.com/share?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&text=【CTF】NJCTF2017 writeup"><i class="fa fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.linkedin.com/shareArticle?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://pinterest.com/pin/create/bookmarklet/?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&is_video=false&description=【CTF】NJCTF2017 writeup"><i class="fa fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=【CTF】NJCTF2017 writeup&body=Check out this article: http://blog.0kami.cn/2017/03/15/njctf-2017/"><i class="fa fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="https://getpocket.com/save?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://reddit.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.stumbleupon.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://digg.com/submit?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&title=【CTF】NJCTF2017 writeup"><i class="fa fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="http://www.tumblr.com/share/link?url=http://blog.0kami.cn/2017/03/15/njctf-2017/&name=【CTF】NJCTF2017 writeup&description=&lt;h1 id=&quot;概述&quot;&gt;&lt;a href=&quot;#概述&quot; class=&quot;headerlink&quot; title=&quot;概述&quot;&gt;&lt;/a&gt;概述&lt;/h1&gt;&lt;p&gt;辞职后没事情干，刚好赶上njctf，还是一样菜啊，只做了7道题，还要继续努力💪（ps:毕业设计什么鬼啊）写一下web的writeup，由于题目还开着，把没做出来的做一遍，纪录一下我觉得有必要记的题&lt;br&gt;"><i class="fa fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+      <ul>
+        <li id="toc"><a class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa fa-list fa-lg" aria-hidden="true"></i> TOC</a></li>
+        <li id="share"><a class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa fa-share-alt fa-lg" aria-hidden="true"></i> Share</a></li>
+        <li id="top" style="display:none"><a class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a></li>
+        <li id="menu"><a class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa fa-bars fa-lg" aria-hidden="true"></i> Menu</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+    
+    <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy; 2018 0kami
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+         
+          <li><a href="/">Home</a></li>
+         
+          <li><a href="/categories/notes/">Notes</a></li>
+         
+          <li><a href="/categories/codereview/">CodeReview</a></li>
+         
+          <li><a href="/categories/ctf/">CTF</a></li>
+         
+          <li><a href="/search/">Search</a></li>
+        
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
+<!-- styles -->
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="/lib/meslo-LG/styles.css">
+<link rel="stylesheet" href="/lib/justified-gallery/justifiedGallery.min.css">
+
+<!-- jquery -->
+<script src="/lib/jquery/jquery.min.js"></script>
+<script src="/lib/justified-gallery/jquery.justifiedGallery.min.js"></script>
+<script src="/js/main.js"></script>
+<!-- search -->
+
+<!-- Google Analytics -->
+
+    <script type="text/javascript">
+        (function(i,s,o,g,r,a,m) {i['GoogleAnalyticsObject']=r;i[r]=i[r]||function() {
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-37473492-6', 'auto');
+        ga('send', 'pageview');
+    </script>
+
+<!-- Disqus Comments -->
+
+    <script type="text/javascript">
+        var disqus_shortname = '0kami';
+
+        (function(){
+            var dsq = document.createElement('script');
+            dsq.type = 'text/javascript';
+            dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        }());
+    </script>
+
+
